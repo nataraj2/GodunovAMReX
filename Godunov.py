@@ -104,6 +104,5 @@ def AdvectionEquation(n):
 
 for i in arange(0,6,1):
 	n = 16*2**i
-	#Initialize(n);
 	AdvectionEquation(n)
 
