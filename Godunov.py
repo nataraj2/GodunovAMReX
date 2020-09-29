@@ -8,7 +8,7 @@ xmin = 0.0
 xmax = 1.0
 cfl = 0.25
 u = 1.0
-dt = 5e-6;#cfl*dx/u
+dt = 5e-4;#cfl*dx/u
 niter = 250
 
 def Initialize(n):

@@ -4,7 +4,7 @@ from math import *
 import matplotlib.pyplot as plt
 from numpy import *
 
-timestop = 0.00125
+timestop = 0.125
 u = 1.0
 ut = u*timestop
 npoints = zeros(6)
@@ -44,9 +44,9 @@ plt.loglog(1/dx[:],error[:],'or',markersize=10)
 slope = zeros([2,2])
 
 slope[0,0] = 10**1.3
-slope[0,1] = 10**(-5.0)
+slope[0,1] = 10**(-3.0)
 slope[1,0] = 10**2.3
-slope[1,1] = 10**(-7.3)
+slope[1,1] = 10**(-5.3)
 
 plt.plot(slope[:,0],slope[:,1],'k')
 
