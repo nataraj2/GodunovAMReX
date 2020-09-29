@@ -11,14 +11,6 @@ u = 1.0
 dt = 5e-4;#cfl*dx/u
 niter = 250
 
-def Initialize(n):
-
-	for i in arange(0,n,1):
-		x[i] = xmin + (i+0.5)*dx
-		s[i] = 0.01*exp(-100.0*(x[i]-0.5)**2)
-		snew[i] = s[i]
-		sold[i] = s[i]
-
 def vanLeer(a,b,c):
     small_qty_sq = (1.e-10)*(1.e-10);
 
