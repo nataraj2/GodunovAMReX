@@ -11,8 +11,8 @@ u = 1.0
 dt = 5e-4;#cfl*dx/u
 niter = 250
 
-limiter = 0
-monotonicity = 0
+limiter = 1
+monotonicity = 1
 
 def vanLeer(a,b,c):
     small_qty_sq = (1.e-10)*(1.e-10);
