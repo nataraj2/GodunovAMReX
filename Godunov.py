@@ -37,13 +37,13 @@ def getfpandfm(s,i,dx):
         d1 = vanLeer(s0,sp1,sm1);
         d2 = vanLeer(sm1,s0,sm2);
 
-	sedge1 = 0.5*(s0+sm1) #- 1.0/6.0*(d1-d2)
+	sedge1 = 0.5*(s0+sm1) - 1.0/6.0*(d1-d2)
 	sedge1 = min(max(sedge1,min(s0, sm1)),max(s0,sm1));
 
 	d1 = vanLeer(sp1,sp2,s0);
     	d2 = vanLeer(s0,sp1,sm1);
 
-        sedge2 = 0.5*(sp1 + s0) #- 1.0/6.0*(d1-d2)
+        sedge2 = 0.5*(sp1 + s0) - 1.0/6.0*(d1-d2)
         sedge2 = min(max(sedge2,min(s0, sp1)),max(s0,sp1));
 
 	sm = sedge1
@@ -93,6 +93,8 @@ def AdvectionEquation(n):
 	
 		if(mod(iteration,10)==0):
 			plt.plot(x,s)
+			#figname = './Images/AdvectionGodunov%04d.png'%(iteration/10)
+			#plt.savefig(figname)
 			plt.pause(0.001)
 			plt.clf()
 

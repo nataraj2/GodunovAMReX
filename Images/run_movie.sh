@@ -1,0 +1,1 @@
+ffmpeg -r 10 -f image2 -s 1920x1080 -start_number 0 -i AdvectionGodunov%04d.png -vframes 1000 -vcodec libx264 -crf 25 -vf pad="width=ceil(iw/2)*2:height=ceil(ih/2)*2" -pix_fmt yuv420p AdvectionGodunov.mov
