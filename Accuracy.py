@@ -34,12 +34,8 @@ for i in arange(0,6,1):
 
 dx = zeros(6)
 
-dx[0] = 1.0/16
-dx[1] = 1.0/32
-dx[2] = 1.0/64
-dx[3] = 1.0/128
-dx[4] = 1.0/256
-dx[5] = 1.0/512
+for i in arange(0,6,1):
+	dx[i] = 1.0/(16*2**i)
 
 plt.loglog(1/dx[:],error[:],'or',markersize=10)
 
