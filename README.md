@@ -3,7 +3,7 @@
 This is a python framework for determining the order of accuracy of 
 the Godunov piecewise parabolic method implemented in amr-wind. The 
 linear advection equation is solved for a Gaussian profile on a domain of 
-size (0,1) with the number of grid points ranging from 16 to 51, and the order 
+size (0,1) with the number of grid points ranging from 16 to 512, and the order 
 of accuracy is computed.
 Just run
 
