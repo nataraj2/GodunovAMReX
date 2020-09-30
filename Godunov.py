@@ -8,8 +8,8 @@ xmin = 0.0
 xmax = 1.0
 cfl = 0.25
 u = 1.0
-dt = 5e-4;#cfl*dx/u
-niter = 250
+dt = 5e-5;#cfl*dx/u
+niter = 2500
 
 limiter = 1
 monotonicity = 1
