@@ -11,6 +11,9 @@ u = 1.0
 dt = 5e-4;#cfl*dx/u
 niter = 250
 
+limiter = 0
+monotonicity = 0
+
 def vanLeer(a,b,c):
     small_qty_sq = (1.e-10)*(1.e-10);
 
@@ -34,14 +37,22 @@ def getfpandfm(s,i,dx):
 	sp1 = s[i+1]
 	sp2 = s[i+2]
 
-        d1 = vanLeer(s0,sp1,sm1);
-        d2 = vanLeer(sm1,s0,sm2);
+	if(limiter==1):
+        	d1 = vanLeer(s0,sp1,sm1);
+        	d2 = vanLeer(sm1,s0,sm2);
+	else:
+		d1 = 0.0
+		d2 = 0.0
 
 	sedge1 = 0.5*(s0+sm1) - 1.0/6.0*(d1-d2)
 	sedge1 = min(max(sedge1,min(s0, sm1)),max(s0,sm1));
 
-	d1 = vanLeer(sp1,sp2,s0);
-    	d2 = vanLeer(s0,sp1,sm1);
+	if (limiter==1):
+		d1 = vanLeer(sp1,sp2,s0);
+    		d2 = vanLeer(s0,sp1,sm1);
+	else:
+		d1 = 0.0
+		d2 = 0.0
 
         sedge2 = 0.5*(sp1 + s0) - 1.0/6.0*(d1-d2)
         sedge2 = min(max(sedge2,min(s0, sp1)),max(s0,sp1));
@@ -49,13 +60,14 @@ def getfpandfm(s,i,dx):
 	sm = sedge1
 	sp = sedge2
 
-	#if ((sedge2-s0)*(s0-sedge1) < 0.e0):
-        #	sp = s0;
-        #	sm = s0;
-    	#elif (abs(sedge2-s[i]) >= 2.0*abs(sedge1-s0)):
-      	#	sp = 3.0*s0 - 2.0*sedge1;
-	#elif (abs(sedge1-s[i]) >= 2.0*abs(sedge2-s0)):
-	#	sm = 3.0*s0 - 2.0*sedge2;
+	if (monotonicity==1):
+		if ((sedge2-s0)*(s0-sedge1) < 0.e0):
+        		sp = s0;
+        		sm = s0;
+    		elif (abs(sedge2-s[i]) >= 2.0*abs(sedge1-s0)):
+      			sp = 3.0*s0 - 2.0*sedge1;	
+		elif (abs(sedge1-s[i]) >= 2.0*abs(sedge2-s0)):
+			sm = 3.0*s0 - 2.0*sedge2;
 	
 	s6 = 6.0*s0 - 3.0*(sm + sp);
 
@@ -67,6 +79,7 @@ def getfpandfm(s,i,dx):
 	return flux
 
 def AdvectionEquation(n):
+	print "running with points ", n  
 	x = zeros(n)
 	s = zeros(n)
 	sold = zeros(n)
@@ -81,7 +94,6 @@ def AdvectionEquation(n):
                 sold[i] = s[i]
 		fL[i] = 0.0
 	for iteration in arange(0,niter+1,1):
-		print iteration, iteration*dt
 		for i in arange(2,n-3,1):
 			fL[i+1] = getfpandfm(sold,i,dx)	
 	
@@ -92,11 +104,12 @@ def AdvectionEquation(n):
 			sold[i] = s[i]	
 	
 		if(mod(iteration,10)==0):
-			plt.plot(x,s)
+			print iteration, iteration*dt
+			#plt.plot(x,s)
 			#figname = './Images/AdvectionGodunov%04d.png'%(iteration/10)
 			#plt.savefig(figname)
-			plt.pause(0.001)
-			plt.clf()
+			#plt.pause(0.001)
+			#plt.clf()
 
 	filename = 'LinePlot%03d.txt'%(n)		
 	f = open(filename,"w")

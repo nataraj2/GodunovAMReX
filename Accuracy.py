@@ -58,9 +58,11 @@ slope[1,1] = 10**(endval)
 plt.plot(slope[:,0],slope[:,1],'k')
 
 plt.title('Order of accuracy = %f'%order,fontsize=30)
+#figname = './Images/Order_FullScheme.png'
 figname = './Images/Order_NoLimAndMono.png'
 #figname = './Images/Order_OnlyLimNoMono.png'
 #figname = './Images/Order_NoLimOnlyMono.png'
+plt.savefig(figname)
 
 plt.show()
 
