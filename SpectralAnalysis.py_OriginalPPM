@@ -1,0 +1,129 @@
+import numpy as np
+from math import *
+#from pycse import bvp
+import matplotlib.pyplot as plt
+from numpy import *
+
+cfl = 0.9
+n=100
+index = 50
+x = zeros(n)
+dx = 0.01
+kdxvec = zeros(n)
+w_mod = zeros(n)
+for i in arange(0,n,1):
+	kdxvec[i] = pi/n*i
+	kdx = kdxvec[i]
+	w_mod[i] = sin(kdx)/kdx
+	#w_mod[i] = (cos(kdx)-1)/kdx
+
+plt.plot(kdxvec,w_mod,'-k',linewidth=2,label='First order scheme')
+#plt.show()
+
+f = [ complex(i, i) for i in range(n) ] 
+f_face=[ complex(i, i) for i in range(n+1) ]
+for i in arange(0,n,1):
+	x[i] = (i+0.5)*dx
+	
+def faceval(f,i):
+	fatface =  (f[i-1]+f[i])/2.0
+	return fatface
+
+j = complex(0,1)
+	
+ratio = [ complex(i, i) for i in range(n) ]
+
+
+limiter = 1
+monotonicity = 0
+
+def vanLeer(a,b,c):
+    small_qty_sq = (1.e-10)*(1.e-10);
+
+    dsc = 0.5e0*(b - c);
+    dsl = 2.e0*(a - c);
+    dsr = 2.e0*(b - a);
+    zero = 0.0
+
+    #return dsc
+
+    if(dsl*dsr > small_qty_sq):
+        if(dsc>0):
+               return min(abs(dsc),min(abs(dsl),abs(dsr)))
+        else:
+               return -1.0*min(abs(dsc),min(abs(dsl),abs(dsr)))
+    else:
+               return zero;
+
+def faceval(s,i):
+        sm3 = s[i-3]
+        sm2 = s[i-2]
+        sm1 = s[i-1]
+        s0 =  s[i]
+        sp1 = s[i+1]
+        sp2 = s[i+2]
+        sp3 = s[i+3]
+
+	if(limiter==1):
+                d1 = vanLeer(s0,sp1,sm1);
+                d2 = vanLeer(sm1,s0,sm2);
+        else:
+                d1 = 0.0
+                d2 = 0.0
+
+	sedge1 = 0.5*(s0+sm1) - 1.0/6.0*(d1-d2)
+        #sedge1 = 7.0/12.0*(s0 + sm1) - 1.0/12.0*(sp1+sm2)
+        #sedge1 = min(max(sedge1,min(s0, sm1)),max(s0,sm1));
+
+        if (limiter==1):
+                d1 = vanLeer(sp1,sp2,s0);
+                d2 = vanLeer(s0,sp1,sm1);
+        else:
+                d1 = 0.0
+                d2 = 0.0
+ 
+        sedge2 = 0.5*(sp1 + s0) - 1.0/6.0*(d1-d2)
+        #sedge2 = 7.0/12.0*(sp1 + s0) - 1.0/12.0*(sp2+sm1)
+        #sedge2 = min(max(sedge2,min(s0, sp1)),max(s0,sp1));
+
+        sm = sedge1
+        sp = sedge2
+
+        #sp = 7.0/12.0*(s0+sp1) - 1.0/12.0*(sp2+sm1)
+	if (monotonicity==1):
+                if ((sedge2-s0)*(s0-sedge1) < 0.e0):
+                        sp = s0;
+                        sm = s0;
+                elif (abs(sedge2-s[i]) >= 2.0*abs(sedge1-s0)):
+                        sp = 3.0*s0 - 2.0*sedge1;
+                elif (abs(sedge1-s[i]) >= 2.0*abs(sedge2-s0)):
+                        sm = 3.0*s0 - 2.0*sedge2;
+
+
+        sigmap = cfl;#u*dt/dx;
+
+        #flux = sp - (0.5*sigmap)*((sp - sm) - (1.e0 -2.e0/3.e0*sigmap)*(6.0*s0 - 3.0*(sm + sp)))
+        s6 = 6.0*s0 - 3.0*(sm + sp);
+        flux = sp - (0.5*sigmap)*((sp - sm) - (1.e0 -2.e0/3.e0*sigmap)*s6)
+        #flux =  7.0/12.0*(s0+sp1) - 1.0/12.0*(sp2+sm1) - (0.5*sigmap)*((sp - sm) - (1.0 -2.0/3.0*sigmap)*s6)
+
+
+        return flux
+
+for kcount in arange(0,n,1):
+	k = kdxvec[kcount]/dx
+	for i in arange(0,n,1):
+		f[i] = exp(j*k*x[i]) 
+	for i in arange(index-10,index+10,1):
+		f_face[i+1] = faceval(f,i)
+	dfdx = (f_face[index+1]-f_face[index])/(dx)
+	ratio[kcount] = dfdx/(j*k*exp(j*k*x[index]))
+
+#plt.plot(kdxvec,real(ratio),linewidth=2,label='PPM with CFL=0.9')
+plt.plot(kdxvec,real(ratio),linewidth=2,label='Orig. PPM no Mono')
+plt.ylabel('Transfer function',fontsize=20)
+plt.xlabel('$k\Delta x$',fontsize=20)
+plt.legend()
+plt.savefig('./Docs/Images/OriginalPPM_Spectral_NoMono.png')
+plt.show()
+
