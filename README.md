@@ -13,7 +13,7 @@ Just run
 
 For constant dt, use the scripts appended with `constdt` for the Godunov and Accuracy.
 
-A numerical spectral analysis code is also available which plots the transfer function of the scheme 
-which shows the resolving power of the scheme.
+A numerical spectral analysis code is also available which plots the transfer function as a 
+function of the wavenumbers, which shows the resolving power of the scheme.
 
 
