@@ -1,0 +1,187 @@
+import numpy as np
+from math import *
+#from pycse import bvp
+import matplotlib.pyplot as plt
+from numpy import *
+
+xmin = 0.0
+xmax = 1.0
+cfl = 0.25
+u = 1.0
+dt = 5e-5;#cfl*dx/u
+niter = 2500
+
+limiter = 0
+monotonicity = 0
+
+def vanLeer(a,b,c):
+    small_qty_sq = (1.e-10)*(1.e-10);
+
+    dsc = 0.5e0*(b - c);
+    dsl = 2.e0*(a - c);
+    dsr = 2.e0*(b - a);
+    zero = 0.0
+    
+    #return dsc
+  
+    if(dsl*dsr > small_qty_sq):
+	if(dsc>0):
+		return min(abs(dsc),min(abs(dsl),abs(dsr)))
+	else:
+		return -1.0*min(abs(dsc),min(abs(dsl),abs(dsr)))
+    else:
+		return zero;
+
+    	
+
+def getfpandfm(s,i,dx):
+	sm2 = s[i-2]
+	sm1 = s[i-1]
+	s0 =  s[i]
+	sp1 = s[i+1]
+	sp2 = s[i+2]
+
+	if(limiter==1):
+        	d1 = vanLeer(s0,sp1,sm1);
+        	d2 = vanLeer(sm1,s0,sm2);
+	else:
+		d1 = 0.0
+		d2 = 0.0
+
+	#sedge1 = 0.5*(s0+sm1) - 1.0/6.0*(d1-d2)
+	sedge1 = 7.0/12.0*(s0 + sm1) - 1.0/12.0*(sp1+sm2)
+	#sedge1 = min(max(sedge1,min(s0, sm1)),max(s0,sm1));
+
+	if (limiter==1):
+		d1 = vanLeer(sp1,sp2,s0);
+    		d2 = vanLeer(s0,sp1,sm1);
+	else:
+		d1 = 0.0
+		d2 = 0.0
+
+        #sedge2 = 0.5*(sp1 + s0) - 1.0/6.0*(d1-d2)
+	sedge2 = 7.0/12.0*(sp1 + s0) - 1.0/12.0*(sp2+sm1)
+        #sedge2 = min(max(sedge2,min(s0, sp1)),max(s0,sp1));
+
+	sm = sedge1
+	sp = sedge2
+
+	if (monotonicity==1):
+		if ((sedge2-s0)*(s0-sedge1) < 0.e0):
+        		sp = s0;
+        		sm = s0;
+    		elif (abs(sedge2-s[i]) >= 2.0*abs(sedge1-s0)):
+      			sp = 3.0*s0 - 2.0*sedge1;	
+		elif (abs(sedge1-s[i]) >= 2.0*abs(sedge2-s0)):
+			sm = 3.0*s0 - 2.0*sedge2;
+	
+
+        sigmap = u*dt/dx;
+        sigmam = u*dt/dx;
+
+	#sp = 7.0/12.0*(s0+sp1) - 1.0/12.0*(sp2+sm1)
+	s6 = 6.0*s0 - 3.0*(sm + sp);
+        flux = sp - (0.5*sigmap)*((sp - sm) - (1.e0 -2.e0/3.e0*sigmap)*s6)
+        #flux =  7.0/12.0*(s0+sp1) - 1.0/12.0*(sp2+sm1) - (0.5*sigmap)*((sp - sm) - (1.e0 -2.e0/3.e0*sigmap)*s6)
+	
+	#flux = (s0+sp1)/2.0
+
+	#flux = sp
+
+	return flux
+
+def ComputeRHS(fL,i):
+	rhsval = fL[i]-fL[i+1]
+	return rhsval
+
+def AdvectionEquation(n):
+	print "running with points ", n  
+	x = zeros(n)
+	s = zeros(n)
+	sold = zeros(n)
+	snew = zeros(n)
+	rhs1 = zeros(n)
+	rhs2 = zeros(n)
+	rhs3 = zeros(n)
+	rhs4 = zeros(n)
+	fL = zeros(n+1)
+	dx = (xmax-xmin)/n
+	for i in arange(0,n,1):
+		dx = (xmax-xmin)/n
+                x[i] = xmin + (i+0.5)*dx
+                s[i] = 0.01*exp(-100.0*(x[i]-0.5)**2)
+                snew[i] = s[i]
+                sold[i] = s[i]
+		fL[i] = 0.0
+	for iteration in arange(0,niter+1,1):
+		for i in arange(3,n-4,1):
+			fL[i+1] = getfpandfm(sold,i,dx)	
+
+		# k1 = dt*rhs(s)
+		for i in arange(3,n-4,1):
+			rhsval1 = ComputeRHS(fL,i)
+			rhs1[i] = u*dt/dx*rhsval1
+
+		# s+k1/2
+		for i in arange(3,n-4,1):
+			s[i] = sold[i] + rhs1[i]/2.0
+
+		for i in arange(3,n-4,1):
+                        fL[i+1] = getfpandfm(s,i,dx)
+
+		# k2 = rhs(s+k1/2)
+		for i in arange(3,n-4,1):
+                        rhsval1 = ComputeRHS(fL,i)
+                        rhs2[i] = u*dt/dx*rhsval1
+
+		# s+k2/2
+		for i in arange(3,n-4,1):
+                        s[i] = sold[i] + rhs2[i]/2.0
+
+		for i in arange(3,n-4,1):
+                        fL[i+1] = getfpandfm(s,i,dx)
+
+		# k3 = rhs(s+k2/2)
+		for i in arange(3,n-4,1):
+                        rhsval1 = ComputeRHS(fL,i)
+                        rhs3[i] = u*dt/dx*rhsval1
+
+		# s+k3
+                for i in arange(3,n-4,1):
+                        s[i] = sold[i] + rhs3[i]
+
+		for i in arange(3,n-4,1):
+                        fL[i+1] = getfpandfm(s,i,dx)
+
+                # k4 = rhs(s+k3)
+                for i in arange(3,n-4,1):
+                        rhsval1 = ComputeRHS(fL,i)
+                        rhs4[i] = u*dt/dx*rhsval1
+
+		for i in arange(3,n-4,1):
+                        s[i] = sold[i] + 1.0/6.0*(rhs1[i]+2.0*rhs2[i]+2.0*rhs3[i]+rhs4[i])
+                        #s[i] = sold[i] + rhs2[i]
+                        #s[i] = sold[i] + rhs1[i]
+	
+		for i in arange(3,n-4,1):
+			sold[i] = s[i]	
+	
+		if(mod(iteration,10)==0):
+			print iteration, iteration*dt
+			#plt.plot(x,s)
+			#plt.ylim([0,0.01])
+			#figname = './Images/AdvectionGodunov%04d.png'%(iteration/10)
+			#plt.savefig(figname)
+			#plt.pause(0.001)
+			#plt.clf()
+
+	filename = 'LinePlot%03d.txt'%(n)		
+	f = open(filename,"w")
+	for i in arange(0,n,1):
+		f.write(("%.16f %.16f\n")%(x[i],s[i]))
+	f.close()
+
+for i in arange(0,4,1):
+	n = 16*2**i
+	AdvectionEquation(n)
+

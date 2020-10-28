@@ -7,8 +7,13 @@ size (0,1) with the number of grid points ranging from 16 to 512, and the order
 of accuracy is computed.
 Just run
 
-```python Godunov.py``` - This runs the advection equation for all grid sizes
+```python Godunov.py_constantCFL``` - This runs the advection equation for all grid sizes
 
-```python Accuracy.py``` - This computes and plots the order of accuracy
+```python Accuracy.py_constCFL``` - This computes and plots the order of accuracy
+
+For constant dt, use the scripts appended with `constdt` for the Godunov and Accuracy.
+
+A numerical spectral analysis code is also available which plots the transfer function of the scheme 
+which shows the resolving power of the scheme.
 
 
