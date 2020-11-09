@@ -1,0 +1,102 @@
+import numpy as np
+from math import *
+#from pycse import bvp
+import matplotlib.pyplot as plt
+from numpy import *
+
+cfl = 0.9
+n=100
+index = 50
+x = zeros(n)
+dx = 0.01
+kdxvec = zeros(n)
+w_mod = zeros(n)
+for i in arange(0,n,1):
+	kdxvec[i] = pi/n*i
+	kdx = kdxvec[i]
+	w_mod[i] = sin(kdx)/kdx
+	#w_mod[i] = (cos(kdx)-1)/kdx
+
+plt.plot(kdxvec,w_mod,'-k',linewidth=2,label='First order scheme')
+#plt.show()
+
+f = [ complex(i, i) for i in range(n) ] 
+f_face=[ complex(i, i) for i in range(n+1) ]
+for i in arange(0,n,1):
+	x[i] = (i+0.5)*dx
+	
+def faceval(f,i):
+	fatface =  (f[i-1]+f[i])/2.0
+	return fatface
+
+j = complex(0,1)
+	
+ratio = [ complex(i, i) for i in range(n) ]
+
+
+def weno5z(a,b,c,d,e):
+	eps = 1e-40
+
+	beta1 =13.0 / 12.0 * (a - 2.0 * b + c) * (a - 2.0 * b + c) +0.25 * (a - 4.0 * b + 3.0 * c) * (a - 4.0 * b + 3.0 * c);
+	beta2 =13.0 / 12.0 * (b - 2.0 * c + d) * (b - 2.0 * c + d) +0.25 * (b - d) * (b - d);
+	beta3 =13.0 / 12.0 * (c - 2.0 * d + e) * (c - 2.0 * d + e) +0.25 * (3.0 * c - 4.0 * d + e) * (3.0 * c - 4.0 * d + e);
+
+	omega1 = 0.1 *(1.0+abs(beta1-beta3)/(eps + beta1));
+	omega2 = 0.6 *(1.0+abs(beta1-beta3)/(eps + beta2));
+	omega3 = 0.3 *(1.0+abs(beta1-beta3)/(eps + beta3));
+
+	omega = omega1 + omega2 + omega3;
+	
+	v_1 = 2.0 * a - 7.0 * b + 11.0 * c;
+	v_2 = -b + 5.0 * c + 2.0 * d;
+	v_3 = 2.0 * c + 5.0 * d - e;
+
+	return (omega1 * v_1 + omega2 * v_2 + omega3 * v_3) / (6.0 * omega);
+
+  
+def faceval(s,i):
+        sm3 = s[i-3]
+        sm2 = s[i-2]
+        sm1 = s[i-1]
+        s0 =  s[i]
+        sp1 = s[i+1]
+        sp2 = s[i+2]
+        sp3 = s[i+3]
+
+	sedge1 = weno5z(sp2, sp1, s0, sm1, sm2);
+        sedge2 = weno5z(sm2, sm1, s0, sp1, sp2); 
+
+        sm = sedge1
+        sp = sedge2
+	
+        sigmap = cfl;#u*dt/dx;
+
+        s6 = 6.0*s0 - 3.0*(sm + sp);
+        flux = sp - (0.5*sigmap)*((sp - sm) - (1.e0 -2.e0/3.e0*sigmap)*s6)
+
+        return flux
+
+for kcount in arange(0,n,1):
+	k = kdxvec[kcount]/dx
+	for i in arange(0,n,1):
+		f[i] = exp(j*k*x[i]) 
+	for i in arange(index-10,index+10,1):
+		f_face[i+1] = faceval(f,i)
+	dfdx = (f_face[index+1]-f_face[index])/(dx)
+	ratio[kcount] = dfdx/(j*k*exp(j*k*x[index]))#*k*dx
+
+f = open('Spectral_WENOZ.txt','w')
+plt.plot(kdxvec,real(ratio),linewidth=2,label='PPM with CFL=0.9')
+plt.plot(kdxvec, -imag(ratio),linewidth=2,label='Orig. PPM no Mono')
+
+for i in arange(1,n,1):
+        f.write('%f %f %f\n'%(kdxvec[i],real(ratio[i]),-imag(ratio[i])*kdxvec[i]))
+
+f.close()
+
+plt.ylabel('Transfer function',fontsize=20)
+plt.xlabel('$k\Delta x$',fontsize=20)
+plt.legend()
+#plt.savefig('./Docs/Images/OriginalPPM_Spectral_NoMono.png')
+plt.show()
+
